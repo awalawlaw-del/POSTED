@@ -2,15 +2,21 @@ const { neon } = require('@neondatabase/serverless');
 
 const KEYS = ['db', 'pick', 'pack', 'hist', 'users', 'batches'];
 
+let sql;
+let ready = false;
+
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   try {
-    const sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL);
-    await sql`create table if not exists kv (
-      k text primary key,
-      v jsonb not null,
-      updated_at timestamptz default now()
-    )`;
+    if (!sql) sql = neon(process.env.DATABASE_URL || process.env.POSTGRES_URL);
+    if (!ready) {
+      await sql`create table if not exists kv (
+        k text primary key,
+        v jsonb not null,
+        updated_at timestamptz default now()
+      )`;
+      ready = true;
+    }
 
     if (req.method === 'GET') {
       const rows = await sql`select k, v from kv`;
