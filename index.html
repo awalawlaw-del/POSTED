@@ -161,14 +161,14 @@ function view(){
     ${sel('db').length?`<button class="bad w" onclick="clr()">Kosongkan Isi Database</button>`:''}</div>`;
   }
   if(tab=='pick'){
-    const av=sel('db').filter(x=>!D.pick.some(p=>p.dbid==x.id)),pos=[...new Set(av.map(x=>x.po))],pk=sel('pick');
-    let h=`<div class="card gl">${dash()}</div>${seg(av.length,pk.length)}`;
+    const G=pgroups(),K=pkGroups(),nrow=G.reduce((n,g)=>n+g.rows.length,0);
+    let h=`<div class="card gl">${dash()}</div>${seg(G.length,K.length)}`;
     if(sub=='todo'){
       h+=`<div class="card gl"><h2>📋 Siapkan Barang</h2>${scanBox('pick')}${msgs()}</div>
-      <div class="card gl"><h2>Belum Disiapkan (${av.length})</h2>${av.length?av.map(x=>item(x,`<span class="tag w">Qty ${x.qty||1}</span>`,`<button class="s" onclick="setPick('${x.id}')">Pilih</button>`)).join(''):'<div class="empty">Tidak ada</div>'}</div>`;
+      <div class="card gl"><h2>Belum Disiapkan (${G.length})</h2>${nrow>G.length?`<p style="color:var(--mut);font-size:12px;margin:0 0 10px">${nrow} baris digabung per part number</p>`:''}${G.length?G.map(g=>item(g,`<span class="tag w">Qty ${g.qty}</span>${g.rows.length>1?`<span class="tag">${g.rows.length} baris</span>`:''}`,`<button class="s" onclick="setPick('${g.key}')">Pilih</button>`)).join(''):'<div class="empty">Tidak ada</div>'}</div>`;
     }else{
-      h+=`<div class="card gl"><h2>Sudah Disiapkan (${pk.length})</h2><p style="color:var(--mut);font-size:12px;margin:0 0 10px">Tekan Siap bila barang sudah selesai disiapkan, lalu muncul di Pengecekan.</p>${pk.length?pk.map(x=>{const u=D.pack.some(p=>p.pid==x.id)||D.hist.some(p=>p.pid==x.id);
-        return item(x,`<span class="tag ${x.ready?'g':'w'}">${u?'Dicek':x.ready?'Siap':'Proses'}</span><span class="tag">Qty ${x.qty}</span>${x.ket?`<span class="tag w">${esc(x.ket)}</span>`:''}`,u?'':(x.ready?`<button class="ghost s" onclick="ready('${x.id}',false)">Batal</button>`:`<button class="ok s" onclick="ready('${x.id}',true)">Siap</button>`)+`<button class="bad s" onclick="del('pick','${x.id}')">✕</button>`)}).join(''):'<div class="empty">Belum ada</div>'}</div>`;
+      h+=`<div class="card gl"><h2>Sudah Disiapkan (${K.length})</h2><p style="color:var(--mut);font-size:12px;margin:0 0 10px">Tekan Siap bila barang sudah selesai disiapkan, lalu muncul di Pengecekan.</p>${K.length?K.map(g=>{const n=g.ed.length,rd=g.ed.filter(r=>r.ready).length,st=!n?'Dicek':rd==n?'Siap':rd?'Sebagian':'Proses';
+        return item(g,`<span class="tag ${(!n||rd==n)?'g':'w'}">${st}</span><span class="tag">Qty ${g.qty}</span>${g.rows.length>1?`<span class="tag">${g.rows.length} baris</span>`:''}${g.kets.map(k=>`<span class="tag w">${esc(k)}</span>`).join('')}`,!n?'':(rd==n?`<button class="ghost s" onclick="readyG('${g.key}',false)">Batal</button>`:`<button class="ok s" onclick="readyG('${g.key}',true)">Siap</button>`)+`<button class="bad s" onclick="delG('${g.key}')">✕</button>`)}).join(''):'<div class="empty">Belum ada</div>'}</div>`;
     }
     return h;
   }
@@ -244,11 +244,19 @@ function addDb(){
   if(!o.po||!o.pn||!o.nama){err='Semua kolom wajib diisi';ok='';return render()}
   D.db.push(o);save('db');err='';render();
 }
-function addPick(){const q=+v('pq'),d=D.db.find(x=>x.id==v('ppn'));if(!d||!q||q<1){err='Pilih part number dan isi qty';return render()}openPick(d.id,q)}
+function addPick(){const q=+v('pq'),d=D.db.find(x=>x.id==v('ppn'));if(!d||!q||q<1){err='Pilih part number dan isi qty';return render()}openPick(sn(d.pn),q)}
 function addPickOld(){
   const q=+v('pq'),d=D.db.find(x=>x.id==v('ppn'));if(!d||!q||q<1){err='Pilih part number dan isi qty';return render()}
   D.pick.push({id:uid(),bid:cur,dbid:d.id,po:d.po,tg:v('ptg'),pn:d.pn,qty:q,nama:d.nama,ready:false});save('pick');err='';render();
 }
+const pgroups=()=>{const pd=new Set(D.pick.map(p=>p.dbid)),m=new Map();
+  sel('db').filter(x=>!pd.has(x.id)).forEach(x=>{const k=sn(x.pn)||('_'+x.id);if(!m.has(k))m.set(k,{key:k,pn:x.pn,rows:[]});m.get(k).rows.push(x)});
+  return [...m.values()].map(g=>({...g,qty:g.rows.reduce((n,r)=>n+(+r.qty||1),0),nama:[...new Set(g.rows.map(r=>(r.nama||'').trim()).filter(Boolean))].join(', '),po:[...new Set(g.rows.map(r=>r.po))].join(', '),so:g.rows.length==1?(g.rows[0].so||''):''}))};
+const pkGroups=()=>{const us=new Set([...D.pack,...D.hist].map(x=>x.pid)),m=new Map();
+  sel('pick').forEach(x=>{const k=sn(x.pn)||('_'+x.id);if(!m.has(k))m.set(k,{key:k,pn:x.pn,rows:[]});m.get(k).rows.push(x)});
+  return [...m.values()].map(g=>({...g,ed:g.rows.filter(r=>!us.has(r.id)),qty:g.rows.reduce((n,r)=>n+(+r.qty||0),0),nama:[...new Set(g.rows.map(r=>(r.nama||'').trim()).filter(Boolean))].join(', '),po:[...new Set(g.rows.map(r=>r.po))].join(', '),so:g.rows.length==1?(g.rows[0].so||''):'',kets:[...new Set(g.rows.map(r=>r.ket).filter(Boolean))]}))};
+function readyG(key,r){const g=pkGroups().find(x=>x.key==key);if(!g)return;g.ed.forEach(x=>{x.ready=r});save('pick');render()}
+function delG(key){const g=pkGroups().find(x=>x.key==key);if(!g)return;if(!confirm('Hapus data ini'+(g.ed.length>1?' ('+g.ed.length+' baris)':'')+'?'))return;const ids=new Set(g.ed.map(x=>x.id));D.pick=D.pick.filter(x=>!ids.has(x.id));save('pick');render()}
 function ready(id,r){const x=D.pick.find(p=>p.id==id);if(x){x.ready=r;save('pick');render()}}
 function addPack(){const p=D.pick.find(x=>x.id==v('kid')),qp=+v('qp');if(!p){err='Pilih barang';return render()}openPack(p.id,qp||null,null,v('dus'))}
 function addPackOld(){
@@ -276,13 +284,13 @@ let MD=null;
 function openPick(id,q,list){MD={m:'pick',id,list:list||[id]};mdRender(q)}
 function openPack(id,q,list,dus){MD={m:'pack',id,list:list||[id]};mdRender(q,dus)}
 function mdClose(){MD=null;document.getElementById('md').style.display='none'}
-function mdItem(){return MD.m=='pick'?D.db.find(i=>i.id==MD.id):D.pick.find(i=>i.id==MD.id)}
+function mdItem(){return MD.m=='pick'?pgroups().find(g=>g.key==MD.id):D.pick.find(i=>i.id==MD.id)}
 function mdRender(q,dus){
-  const p=MD.m=='pick',x=mdItem(),e=x.qty||1;if(q==null)q=e;
-  const opts=MD.list.length>1?`<label>Item cocok (${MD.list.length})</label><select onchange="MD.id=this.value;mdRender()">${MD.list.map(id=>{const i=(p?D.db:D.pick).find(z=>z.id==id);return `<option value="${id}" ${id==MD.id?'selected':''}>${esc(i.pn)} | ${esc((i.nama||'').trim())} | SO ${esc(i.so||'-')}</option>`}).join('')}</select>`:'';
+  const p=MD.m=='pick',x=mdItem();if(!x)return mdClose();const e=x.qty||1,PGc=p?pgroups():[];if(q==null)q=e;
+  const opts=MD.list.length>1?`<label>Item cocok (${MD.list.length})</label><select onchange="MD.id=this.value;mdRender()">${MD.list.map(id=>{const i=p?PGc.find(z=>z.key==id):D.pick.find(z=>z.id==id);if(!i)return '';return `<option value="${id}" ${id==MD.id?'selected':''}>${esc(i.pn)} | ${esc((i.nama||'').trim())} | ${i.rows&&i.rows.length>1?i.rows.length+' baris':'SO '+esc(i.so||'-')}</option>`}).join('')}</select>`:'';
   const el=document.getElementById('md');
   el.innerHTML=`<div class="card gl"><h2>${p?'📋 Proses Penyiapan':'📦 Proses Pengecekan'}</h2>
-  <div class="it" style="animation:none"><div class="im"><div class="pn">${esc(x.pn)}</div><div class="sb">${esc((x.nama||'').trim()||'-')} · PO ${esc(x.po)}${x.so?' · SO '+esc(x.so):''}</div><div class="tg"><span class="tag g">Qty permintaan: ${e}</span></div></div></div>${opts}
+  <div class="it" style="animation:none"><div class="im"><div class="pn">${esc(x.pn)}</div><div class="sb">${esc((x.nama||'').trim()||'-')} · PO ${esc(x.po)}${x.so?' · SO '+esc(x.so):''}</div><div class="tg"><span class="tag g">Qty permintaan: ${e}</span>${p&&x.rows.length>1?`<span class="tag">${x.rows.length} baris digabung</span>`:''}</div></div></div>${opts}
   <label>Qty ${p?'disiapkan':'packing'}</label><input id="mq" type="number" inputmode="numeric" min="1" value="${q}" oninput="mdChk()">
   <div id="mk" style="display:${q<e?'block':'none'}"><label>Keterangan (qty kurang dari ${e})</label><select id="mkt"><option value="">- pilih -</option><option>Barang kurang</option><option>Rusak</option></select></div>
   ${p?`<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="mrd" checked style="width:auto"> Tandai Siap (muncul di Pengecekan)</label>`:`<label>Nomor Dus</label><input id="mdus" value="${esc(dus||'')}">`}
@@ -292,18 +300,21 @@ function mdRender(q,dus){
 }
 function mdChk(){const e=mdItem().qty||1,q=+v('mq');document.getElementById('mk').style.display=q<e?'block':'none';document.getElementById('mmsg').textContent=q>e?'Qty melebihi permintaan ('+e+'), tidak bisa disimpan':''}
 function mdSave(){
-  const x=mdItem(),e=x.qty||1,q=+v('mq'),ket=v('mkt'),m=document.getElementById('mmsg');
+  const x=mdItem();if(!x)return mdClose();const e=x.qty||1,q=+v('mq'),ket=v('mkt'),m=document.getElementById('mmsg');
   if(!q||q<1)return m.textContent='Isi qty minimal 1';
   if(q>e)return m.textContent='Qty melebihi permintaan ('+e+'), tidak bisa disimpan';
   if(q<e&&!ket)return m.textContent='Qty beda dari permintaan ('+e+'). Pilih keterangan: Barang kurang atau Rusak';
-  const kt=q<e?ket:'';
+  const kt=q<e?ket:'';let note='Tersimpan';
   if(MD.m=='pick'){
-    D.pick.push({id:uid(),bid:cur,dbid:x.id,po:x.po,tg:today(),pn:x.pn,qty:q,dbqty:e,ket:kt,nama:x.nama,so:x.so,ready:document.getElementById('mrd').checked});save('pick');
+    const rd=document.getElementById('mrd').checked;let rem=q,made=0;
+    x.rows.forEach(r=>{const rq=+r.qty||1,a=Math.min(rem,rq);if(a<=0)return;rem-=a;made++;
+      D.pick.push({id:uid(),bid:cur,dbid:r.id,po:r.po,tg:today(),pn:r.pn,qty:a,dbqty:rq,ket:a<rq?kt:'',nama:r.nama,so:r.so,ready:rd})});
+    save('pick');if(made<x.rows.length)note='Tersimpan. '+(x.rows.length-made)+' baris belum terpenuhi, tetap di Belum Disiapkan';
   }else{
     const dus=v('mdus').trim();if(!dus)return m.textContent='Isi nomor dus';
     D.pack.push({id:uid(),bid:x.bid,pid:x.id,po:x.po,tg:x.tg,pn:x.pn,qty:x.qty,dus,qp:q,nama:x.nama||nama(x.po,x.pn),ket:kt||x.ket||''});save('pack');
   }
-  mdClose();err='';ok='Tersimpan';render();
+  mdClose();err='';ok=note;render();
 }
 /* ===== Scan ===== */
 const sn=s=>String(s).toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -315,9 +326,9 @@ function onScan(m,raw){
   if(c.length<4)return smsg('Part number tidak ada di sistem',false);
   const hit=x=>{const p=sn(x.pn);return p.length>=4&&(c==p||c.includes(p))};
   if(m=='pick'){
-    const l=D.db.filter(x=>x.bid==cur&&!D.pick.some(p=>p.dbid==x.id)&&hit(x));
+    const l=pgroups().filter(hit);
     if(!l.length)return smsg(D.db.some(x=>x.bid==cur&&hit(x))?'Part number sudah disiapkan':'Part number tidak ada di sistem',false);
-    openPick(l[0].id,null,l.map(i=>i.id));
+    openPick(l[0].key,null,l.map(i=>i.key));
   }else{
     const used=new Set([...D.pack,...D.hist].map(x=>x.pid)),l=D.pick.filter(x=>x.bid==cur&&x.ready&&!used.has(x.id)&&hit(x));
     if(!l.length)return smsg(D.db.some(x=>x.bid==cur&&hit(x))?'Part number belum siap atau sudah dicek':'Part number tidak ada di sistem',false);
