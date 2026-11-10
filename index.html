@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="id"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>POSTED</title>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -68,6 +68,18 @@ header b{background:linear-gradient(90deg,var(--pri),#c44bff);-webkit-background
 .sm button.on{background:var(--inp);color:var(--pri);border:1px solid var(--gb)}
 #scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:14;display:none}#scrim.open{display:block}
 @media(min-width:900px){#side{transform:none}#scrim{display:none!important}#burger{display:none}main{margin-left:290px;max-width:900px}header{margin-left:290px}}
+/* performa HP: efek berat dimatikan/diringankan */
+body{background-attachment:scroll}
+body::before,body::after{animation:none!important}
+.prog i{animation:none!important}
+.it{animation:none!important}
+@media(max-width:700px){
+.gl{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(255,255,255,.66)}
+.card{animation:none}
+body::before,body::after{filter:blur(40px)}
+}
+@media(max-width:700px) and (prefers-color-scheme:dark){:root:not([data-theme="light"]) .gl{background:rgba(255,255,255,.1)}}
+@media(max-width:700px){:root[data-theme="dark"] .gl{background:rgba(255,255,255,.1)}}
 </style></head><body>
 <div id="app" style="padding:40px;text-align:center;font-family:system-ui;color:#56617d">Memuat data…</div>
 <div id="md"></div>
