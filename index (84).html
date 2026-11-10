@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>POSTED</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+:root{--g1:#c9dcff;--g2:#f0d9ff;--g3:#ffe3d1;--tx:#18203a;--mut:#56617d;--pri:#2f6bff;--ok:#14a05a;--bad:#e04848;--glass:rgba(255,255,255,.5);--gb:rgba(255,255,255,.7);--inp:rgba(255,255,255,.55);--ln:rgba(40,60,110,.12);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--g1:#14204a;--g2:#34154f;--g3:#10303c;--tx:#eef1fb;--mut:#a3aecb;--pri:#5b92ff;--ok:#3dcf85;--bad:#ff7070;--glass:rgba(255,255,255,.09);--gb:rgba(255,255,255,.2);--inp:rgba(255,255,255,.1);--ln:rgba(255,255,255,.12);color-scheme:dark}}
+:root[data-theme="dark"]{--g1:#14204a;--g2:#34154f;--g3:#10303c;--tx:#eef1fb;--mut:#a3aecb;--pri:#5b92ff;--ok:#3dcf85;--bad:#ff7070;--glass:rgba(255,255,255,.09);--gb:rgba(255,255,255,.2);--inp:rgba(255,255,255,.1);--ln:rgba(255,255,255,.12);color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;color:var(--tx);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding-bottom:100px;background:linear-gradient(135deg,var(--g1),var(--g2) 55%,var(--g3)) fixed;position:relative}
+body::before,body::after{content:"";position:fixed;width:280px;height:280px;border-radius:50%;filter:blur(70px);opacity:.55;z-index:-1}
+body::before{background:#5b8cff;top:8%;left:-80px}body::after{background:#ff7ad9;bottom:12%;right:-90px}
+.gl{background:var(--glass);border:1px solid var(--gb);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);box-shadow:0 8px 30px rgba(20,30,80,.12)}
+header{display:flex;justify-content:space-between;align-items:center;margin:10px 12px 0;padding:12px 16px;border-radius:18px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:5}
+header b{font-size:18px;letter-spacing:1.5px}header small{color:var(--mut)}
+main{padding:14px;max-width:760px;margin:auto}
+.card{border-radius:20px;padding:16px;margin-bottom:14px}
+h2{margin:0 0 10px;font-size:16px}
+label{display:block;font-size:12px;color:var(--mut);margin:9px 0 4px}
+input,select{width:100%;padding:12px;border:1px solid var(--gb);border-radius:12px;background:var(--inp);color:var(--tx);font-size:15px;outline:none}
+input:focus,select:focus{border-color:var(--pri)}
+button{border:0;border-radius:12px;padding:11px 14px;font-size:14px;font-weight:600;background:var(--pri);color:#fff;cursor:pointer;box-shadow:0 4px 14px rgba(47,107,255,.3)}
+button.ok{background:var(--ok);box-shadow:none}button.bad{background:var(--bad);box-shadow:none}button.ghost{background:var(--inp);color:var(--tx);border:1px solid var(--gb);box-shadow:none}
+button.s{padding:6px 10px;font-size:12px;border-radius:9px}button.w{width:100%;margin-top:12px}
+.sc{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px;white-space:nowrap}
+th,td{padding:9px 8px;border-bottom:1px solid var(--ln);text-align:left}th{color:var(--mut);font-size:12px}
+nav{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 10px);left:12px;right:12px;display:flex;border-radius:22px;padding:4px;z-index:6;max-width:736px;margin:auto}
+nav button{flex:1;background:none;color:var(--mut);box-shadow:none;border-radius:18px;padding:8px 2px;font-size:10.5px}
+nav button span{display:block;font-size:19px}nav button.on{color:var(--pri);background:var(--inp)}
+.empty{color:var(--mut);text-align:center;padding:14px}.msg{color:var(--bad);font-size:13px;margin-top:8px}.okm{color:var(--ok);font-size:13px;margin-top:8px}
+.tag{padding:3px 9px;border-radius:99px;font-size:11px;background:var(--inp);border:1px solid var(--gb)}
+.tag.g{color:var(--ok)}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1;min-width:120px}
+.hide{display:none}
+@keyframes fl{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,-50px)}}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes shine{0%{background-position:0 0}100%{background-position:200% 0}}
+body::before{animation:fl 12s ease-in-out infinite}body::after{animation:fl 15s ease-in-out infinite reverse}
+.card,.it{animation:up .45s both}.card:nth-child(2){animation-delay:.06s}.card:nth-child(3){animation-delay:.12s}.card:nth-child(4){animation-delay:.18s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button{transition:transform .12s,filter .15s}button:active{transform:scale(.95)}button:hover{filter:brightness(1.08)}
+button.w:not(.ok):not(.bad){background:linear-gradient(135deg,var(--pri),#8a5bff)}
+header b{background:linear-gradient(90deg,var(--pri),#c44bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.st{border-radius:16px;padding:10px 4px;text-align:center;background:var(--inp);border:1px solid var(--gb)}
+.st b{display:block;font-size:22px;background:linear-gradient(135deg,var(--pri),#c44bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.st span{font-size:10.5px;color:var(--mut)}
+.prog{height:10px;border-radius:99px;background:var(--inp);margin-top:12px;overflow:hidden;border:1px solid var(--gb)}
+.prog i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#2f6bff,#c44bff,#2f6bff);background-size:200% 100%;animation:shine 3s linear infinite;transition:width .6s}
+.pl{font-size:12px;color:var(--mut);margin-top:6px;text-align:right}
+.seg{display:flex;gap:6px;padding:5px;border-radius:18px;margin-bottom:14px}
+.seg button{flex:1;background:none;color:var(--mut);box-shadow:none;border-radius:14px;padding:11px 6px}
+.seg button.on{background:linear-gradient(135deg,var(--pri),#8a5bff);color:#fff;box-shadow:0 6px 18px rgba(80,90,255,.35)}
+.seg i{font-style:normal;background:rgba(255,255,255,.25);border-radius:99px;padding:1px 8px;margin-left:4px;font-size:12px}
+.it{display:flex;align-items:center;gap:10px;padding:11px 12px;margin-bottom:8px;border-radius:14px;background:var(--inp);border:1px solid var(--gb)}
+.im{flex:1;min-width:0}.pn{font-weight:700;font-family:ui-monospace,Menlo,monospace;font-size:14px;word-break:break-all}
+.sb{font-size:12px;color:var(--mut);margin-top:2px}.tg{margin-top:6px;display:flex;gap:5px;flex-wrap:wrap}
+.ib{display:flex;gap:5px;flex-shrink:0}.tag.w{color:#d98a00}
+#md .card{width:100%;max-width:440px;margin:0;max-height:92vh;overflow-y:auto}
+#ov,#md{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px}
+#vid{display:none;background:#000;max-height:60vh}
+#side{position:fixed;top:0;left:0;bottom:0;width:270px;max-width:82vw;z-index:15;padding:calc(env(safe-area-inset-top,0px) + 16px) 14px calc(env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-105%);transition:transform .25s;display:flex;flex-direction:column;border-radius:0 24px 24px 0;overflow-y:auto}
+#side.open{transform:none}
+.sb-t{font-size:20px;font-weight:700;letter-spacing:1.5px;margin-bottom:10px}
+.sm{margin-top:16px;display:flex;flex-direction:column;gap:6px}
+.sm button{background:none;color:var(--tx);box-shadow:none;text-align:left;padding:13px 14px;font-size:15px}
+.sm button.on{background:var(--inp);color:var(--pri);border:1px solid var(--gb)}
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:14;display:none}#scrim.open{display:block}
+@media(min-width:900px){#side{transform:none}#scrim{display:none!important}#burger{display:none}main{margin-left:290px;max-width:900px}header{margin-left:290px}}
+</style></head><body>
+<div id="app"></div>
+<div id="md"></div>
+<div id="ov"><div class="card gl" style="width:100%;max-width:420px;margin:0"><h2>Scan Part Number</h2><div id="qr"></div><video id="vid" playsinline muted></video><div id="cmsg" class="msg"></div><button class="bad w" onclick="stopCam()">Tutup</button></div></div>
+<script>
+const mem={};
+const S={get(k,d){try{const v=localStorage.getItem('posted_'+k);return v?JSON.parse(v):d}catch(e){return mem[k]??d}},
+set(k,v){try{localStorage.setItem('posted_'+k,JSON.stringify(v))}catch(e){mem[k]=v}}};
+let D={db:S.get('db',[]),pick:S.get('pick',[]),pack:S.get('pack',[]),hist:S.get('hist',[]),users:S.get('users',[{u:'admin',p:'1234',role:'Admin'}])};
+let me=S.get('me',null),tab='db',err='',ok='';
+const save=k=>S.set(k,D[k]);
+const today=()=>new Date().toISOString().slice(0,10);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const v=id=>(document.getElementById(id)||{}).value||'';
+const $=h=>document.getElementById('app').innerHTML=h;
+const tbl=(h,rows)=>rows.length?`<div class="sc"><table><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</table></div>`:'<div class="empty">Belum ada data</div>';
+const nama=(po,pn)=>(D.db.find(x=>x.po==po&&x.pn==pn)||{}).nama||'-';
+const msgs=()=>`${err?`<div class="msg">${err}</div>`:''}${ok?`<div class="okm">${ok}</div>`:''}`;
+
+D.batches=S.get('batches',[]);
+if(!D.batches.length){const b={id:uid(),name:'Database '+today(),tgl:today(),done:false};D.batches=[b];['db','pick','pack','hist'].forEach(k=>{D[k].forEach(x=>{if(!x.bid)x.bid=b.id});save(k)});save('batches')}
+let cur=S.get('cur',null);if(!D.batches.find(b=>b.id==cur))cur=D.batches[0].id;
+let hf='all',sideOpen=false;
+const B=()=>D.batches.find(b=>b.id==cur)||{};
+const sel=k=>D[k].filter(x=>x.bid==cur);
+const bn=id=>(D.batches.find(b=>b.id==id)||{}).name||'-';
+const histRows=()=>D.hist.filter(x=>hf=='all'||x.bid==hf);
+let sub='todo';
+const stats=()=>{const pk=sel('pick'),hs=D.hist.filter(x=>x.bid==cur);return{tot:sel('db').length,pk:pk.length,pc:sel('pack').length+hs.length,ps:hs.length}};
+const dash=()=>{const s=stats(),p=s.tot?Math.round(s.ps/s.tot*100):0;
+  return `<div class="stats"><div class="st"><b>${s.tot}</b><span>Total</span></div><div class="st"><b>${s.pk}</b><span>Disiapkan</span></div><div class="st"><b>${s.pc}</b><span>Dicek</span></div><div class="st"><b>${s.ps}</b><span>Posted</span></div></div><div class="prog"><i style="width:${p}%"></i></div><div class="pl">${p}% selesai (${s.ps}/${s.tot})</div>`};
+const seg=(a,b)=>`<div class="seg gl"><button class="${sub=='todo'?'on':''}" onclick="sub='todo';render()">⏳ Belum <i>${a}</i></button><button class="${sub=='done'?'on':''}" onclick="sub='done';render()">✅ Sudah <i>${b}</i></button></div>`;
+const item=(x,tags,btn)=>`<div class="it"><div class="im"><div class="pn">${esc(x.pn)}</div><div class="sb">${esc((x.nama||'').trim()||'-')} · PO ${esc(x.po)}${x.so?' · SO '+esc(x.so):''}</div><div class="tg">${tags}</div></div><div class="ib">${btn||''}</div></div>`;
+function setPick(id){return openPick(id)}
+function setPickOld(id){const x=D.db.find(d=>d.id==id),o=document.getElementById('ppo');if(!x||!o)return;o.value=x.po;fillPn();document.getElementById('ppn').value=id;fillQ();window.scrollTo({top:0,behavior:'smooth'})}
+function setPack(id){return openPack(id)}
+function setPackOld(id){const k=document.getElementById('kid');if(!k)return;k.value=id;window.scrollTo({top:0,behavior:'smooth'});const d=document.getElementById('dus');if(d)d.focus()}
+function side(o){sideOpen=o;const e=document.getElementById('side'),s=document.getElementById('scrim');if(e)e.classList.toggle('open',o);if(s)s.classList.toggle('open',o)}
+function setCur(id){cur=id;S.set('cur',id);sideOpen=false;err='';ok='';render()}
+function newB(){const n=v('nbn').trim()||('Database '+today());const b={id:uid(),name:n,tgl:today(),done:false};D.batches.push(b);save('batches');tab='db';setCur(b.id)}
+function doneB(){B().done=!B().done;save('batches');render()}
+function renB(){const n=v('bn').trim();if(!n)return;B().name=n;save('batches');ok='Nama disimpan';render()}
+function delB(){if(D.batches.length<2){err='Minimal harus ada satu database';return render()}
+  if(!confirm('Hapus database ini beserta picking, packing, dan history-nya?'))return;
+  ['db','pick','pack','hist'].forEach(k=>{D[k]=D[k].filter(x=>x.bid!=cur);save(k)});
+  D.batches=D.batches.filter(b=>b.id!=cur);save('batches');setCur(D.batches[0].id)}
+function login(){
+  $(`<main style="margin-top:12vh"><div class="card gl"><h2 style="font-size:26px;text-align:center">📦 POSTED</h2>
+  <label>User</label><input id="lu" autocapitalize="off"><label>PIN</label><input id="lp" type="password" inputmode="numeric">
+  <button class="w" onclick="doLogin()">Masuk</button><div class="msg">${err}</div>
+  <p style="color:var(--mut);font-size:12px">Default: admin / 1234</p></div></main>`);
+}
+function doLogin(){
+  const u=D.users.find(x=>x.u==v('lu').trim()&&x.p==v('lp'));
+  if(!u){err='User atau PIN salah';return login()}
+  err='';me=u;S.set('me',u);tab='db';render();
+}
+function logout(){me=null;S.set('me',null);login()}
+function go(t){tab=t;sub='todo';err='';ok='';sideOpen=false;render()}
+
+function view(){
+  if(tab=='db'){
+    return `<div class="card gl">${dash()}</div><div class="card gl"><h2>${esc(B().name)} ${B().done?'<span class="tag g">Selesai</span>':''}</h2>
+    <label>Nama database</label><div class="row" style="flex-wrap:nowrap"><input id="bn" value="${esc(B().name)}"><button class="ghost" style="flex:0 0 auto" onclick="renB()">Simpan</button></div>
+    <div class="row" style="margin-top:12px"><button class="${B().done?'ghost':'ok'}" onclick="doneB()">${B().done?'Buka Lagi':'Tandai Selesai'}</button><button class="bad" onclick="delB()">Hapus Database</button></div>${tab=='db'?msgs():''}</div>
+    <div class="card gl"><h2>Impor dari Excel</h2>
+    <p style="color:var(--mut);font-size:12px;margin:0 0 8px">Format sama dengan file POSTED Anda: Nomor, PART NUMBER, QTY, NO SO, Pemesan, Order Date. Semua sheet yang punya kolom itu dibaca.</p>
+    <div class="row"><button class="ghost" onclick="tpl()">Unduh Template</button><button onclick="document.getElementById('fx').click()">Pilih File Excel</button></div>
+    <input id="fx" type="file" class="hide" accept=".xlsx,.xls,.csv" onchange="impor(this)">${msgs()}</div>
+    <div class="card gl"><h2>Tambah Manual</h2>
+    <label>Nomor PO</label><input id="po"><label>Tanggal</label><input id="tg" type="date" value="${today()}">
+    <label>Part Number</label><input id="pn"><label>Nama (Pemesan)</label><input id="nm">
+    <button class="w" onclick="addDb()">Simpan</button></div>
+    <div class="card gl"><h2>Isi Database (${sel('db').length})</h2>${tbl(['Nomor PO','Tgl','Part Number','Nama','Qty','NO SO',''],sel('db').map(x=>[esc(x.po),x.tg,esc(x.pn),esc(x.nama),x.qty??'',esc(x.so||''),`<button class="bad s" onclick="del('db','${x.id}')">Hapus</button>`]))}
+    ${sel('db').length?`<button class="bad w" onclick="clr()">Kosongkan Isi Database</button>`:''}</div>`;
+  }
+  if(tab=='pick'){
+    const av=sel('db').filter(x=>!D.pick.some(p=>p.dbid==x.id)),pos=[...new Set(av.map(x=>x.po))],pk=sel('pick');
+    let h=`<div class="card gl">${dash()}</div>${seg(av.length,pk.length)}`;
+    if(sub=='todo'){
+      h+=`<div class="card gl"><h2>📋 Siapkan Barang</h2>${scanBox('pick')}${msgs()}</div>
+      <div class="card gl"><h2>Belum Disiapkan (${av.length})</h2>${av.length?av.map(x=>item(x,`<span class="tag w">Qty ${x.qty||1}</span>`,`<button class="s" onclick="setPick('${x.id}')">Pilih</button>`)).join(''):'<div class="empty">Tidak ada</div>'}</div>`;
+    }else{
+      h+=`<div class="card gl"><h2>Sudah Disiapkan (${pk.length})</h2><p style="color:var(--mut);font-size:12px;margin:0 0 10px">Tekan Siap bila barang sudah selesai disiapkan, lalu muncul di Pengecekan.</p>${pk.length?pk.map(x=>{const u=D.pack.some(p=>p.pid==x.id)||D.hist.some(p=>p.pid==x.id);
+        return item(x,`<span class="tag ${x.ready?'g':'w'}">${u?'Dicek':x.ready?'Siap':'Proses'}</span><span class="tag">Qty ${x.qty}</span>${x.ket?`<span class="tag w">${esc(x.ket)}</span>`:''}`,u?'':(x.ready?`<button class="ghost s" onclick="ready('${x.id}',false)">Batal</button>`:`<button class="ok s" onclick="ready('${x.id}',true)">Siap</button>`)+`<button class="bad s" onclick="del('pick','${x.id}')">✕</button>`)}).join(''):'<div class="empty">Belum ada</div>'}</div>`;
+    }
+    return h;
+  }
+  if(tab=='pack'){
+    const used=new Set([...D.pack,...D.hist].map(x=>x.pid)),todo=sel('pick').filter(x=>!used.has(x.id)),open=todo.filter(x=>x.ready),pc=sel('pack');
+    let h=`<div class="card gl">${dash()}</div>${seg(todo.length,pc.length)}`;
+    if(sub=='todo'){
+      h+=`<div class="card gl"><h2>📦 Cek &amp; Packing</h2>${scanBox('pack')}${msgs()}</div>
+      <div class="card gl"><h2>Belum Dicek (${todo.length})</h2>${todo.length?todo.map(x=>item(x,`<span class="tag ${x.ready?'g':'w'}">${x.ready?'Siap dicek':'Belum siap'}</span><span class="tag">Qty ${x.qty}</span>`,x.ready?`<button class="s" onclick="setPack('${x.id}')">Pilih</button>`:'')).join(''):'<div class="empty">Semua sudah dicek</div>'}</div>`;
+    }else{
+      h+=`<div class="card gl"><h2>Hasil Packing (${pc.length})</h2>${tbl(['Nomor PO','Part Number','Qty','Nomor Dus','Qty Packing','Nama Pemesan','Keterangan',''],pc.map(x=>[esc(x.po),esc(x.pn),x.qty,esc(x.dus),x.qp,esc(x.nama),esc(x.ket||'-'),`<button class="ok s" onclick="post('${x.id}')">Posted</button>`]))}
+      ${pc.length?`<div class="row" style="margin-top:12px"><button class="ghost" onclick="expo('pack')">Ekspor Excel</button><button class="ok" onclick="postAll()">Posted Semua</button></div>`:''}${msgs()}</div>`;
+    }
+    return h;
+  }
+  if(tab=='pick_old'){
+    const av=sel('db').filter(x=>!D.pick.some(p=>p.dbid==x.id));const pos=[...new Set(av.map(x=>x.po))];
+    return `<div class="card gl"><h2>Proses Penyiapan (Picking)</h2>${pos.length?`
+    ${scanBox('pick')}<label>Nomor PO</label><select id="ppo" onchange="fillPn()">${pos.map(p=>`<option>${esc(p)}</option>`).join('')}</select>
+    <label>Tanggal</label><input id="ptg" type="date" value="${today()}">
+    <label>Part Number</label><select id="ppn" onchange="fillQ()"></select>
+    <label>Qty</label><input id="pq" type="number" inputmode="numeric" min="1">
+    <button class="w" onclick="addPick()">Simpan Picking</button>${msgs()}`:'<div class="empty">Isi menu Database dulu</div>'}</div>
+    <div class="card gl"><h2>Daftar Picking</h2><p style="color:var(--mut);font-size:12px;margin:0 0 8px">Tekan Siap setelah barang selesai disiapkan, lalu item muncul di Pengecekan.</p>
+    ${tbl(['Nomor PO','Tgl','Part Number','Qty','Status','',''],sel('pick').map(x=>{const used=D.pack.some(p=>p.pid==x.id)||D.hist.some(p=>p.pid==x.id);
+    return [esc(x.po),x.tg,esc(x.pn),x.qty,`<span class="tag ${x.ready?'g':''}">${used?'Dicek':x.ready?'Siap':'Disiapkan'}</span>`,
+    used?'':x.ready?`<button class="ghost s" onclick="ready('${x.id}',false)">Batal</button>`:`<button class="ok s" onclick="ready('${x.id}',true)">Siap</button>`,
+    used?'':`<button class="bad s" onclick="del('pick','${x.id}')">Hapus</button>`]}))}</div>`;
+  }
+  if(tab=='pack_old'){
+    const used=new Set([...D.pack,...D.hist].map(x=>x.pid));
+    const open=D.pick.filter(x=>x.bid==cur&&x.ready&&!used.has(x.id));
+    return `<div class="card gl"><h2>Proses Pengecekan (Packing)</h2>${open.length?`
+    ${scanBox('pack')}<label>Barang yang sudah disiapkan</label><select id="kid">${open.map(x=>`<option value="${x.id}">${esc(x.po)} | ${esc(x.pn)} | Qty ${x.qty} | ${esc(x.nama)}</option>`).join('')}</select>
+    <label>Nomor Dus</label><input id="dus"><label>Qty Packing</label><input id="qp" type="number" inputmode="numeric" min="1">
+    <button class="w" onclick="addPack()">Simpan Packing</button>${msgs()}`:'<div class="empty">Belum ada barang yang ditandai Siap di Penyiapan</div>'}</div>
+    <div class="card gl"><h2>Hasil Packing (${sel('pack').length})</h2>${tbl(['Nomor PO','Part Number','Qty','Nomor Dus','Qty Packing','Nama Pemesan',''],sel('pack').map(x=>[esc(x.po),esc(x.pn),x.qty,esc(x.dus),x.qp,esc(x.nama),`<button class="ok s" onclick="post('${x.id}')">Posted</button>`]))}
+    ${sel('pack').length?`<div class="row" style="margin-top:12px"><button class="ghost" onclick="expo('pack')">Ekspor Excel</button><button class="ok" onclick="postAll()">Posted Semua</button></div>`:''}</div>`;
+  }
+  if(tab=='hist'){
+    return `<div class="card gl"><h2>History Posted (${histRows().length})</h2>
+    <select onchange="hf=this.value;render()"><option value="all">Semua Database</option>${D.batches.map(b=>`<option value="${b.id}" ${hf==b.id?'selected':''}>${esc(b.name)}</option>`).join('')}</select><div style="height:10px"></div>
+    ${tbl(['Database','Tgl Posted','Nomor PO','Part Number','Qty','Nomor Dus','Qty Packing','Nama Pemesan','Keterangan'],histRows().map(x=>[esc(bn(x.bid)),x.pt,esc(x.po),esc(x.pn),x.qty,esc(x.dus),x.qp,esc(x.nama),esc(x.ket||'-')]))}
+    ${histRows().length?`<button class="w" onclick="expo('hist')">Ekspor Excel</button>`:''}${msgs()}</div>`;
+  }
+  if(tab=='usr'){
+    const adm=me.role=='Admin';
+    return `${adm?`<div class="card gl"><h2>Tambah User</h2><label>Nama User</label><input id="nu" autocapitalize="off"><label>PIN</label><input id="np" inputmode="numeric">
+    <label>Peran</label><select id="nr"><option>Staff</option><option>Admin</option></select><button class="w" onclick="addUser()">Simpan</button>${msgs()}</div>`:''}
+    <div class="card gl"><h2>Daftar User</h2>${tbl(['User','Peran',''],D.users.map(x=>[esc(x.u),x.role,adm&&x.u!=me.u?`<button class="bad s" onclick="delUser('${esc(x.u)}')">Hapus</button>`:'']))}
+    <button class="bad w" onclick="logout()">Keluar</button></div>`;
+  }
+}
+function render(){
+  if(!me)return login();
+  const T=[['db','🗂️','Database'],['pick','📋','Penyiapan'],['pack','📦','Pengecekan'],['hist','🕘','History'],['usr','👤','User']];
+  $(`<header class="gl"><button id="burger" class="ghost" style="font-size:18px;padding:6px 12px" onclick="side(true)">☰</button><b>📦 POSTED</b><small>${esc(me.u)}</small></header>
+  <div id="scrim" class="${sideOpen?'open':''}" onclick="side(false)"></div>
+  <aside id="side" class="gl ${sideOpen?'open':''}"><div class="sb-t">📦 POSTED</div>
+  <label>Database Aktif</label><select onchange="setCur(this.value)">${D.batches.map(b=>`<option value="${b.id}" ${b.id==cur?'selected':''}>${esc(b.name)}${b.done?' ✓':''}</option>`).join('')}</select>
+  <div class="row" style="flex-wrap:nowrap;margin-top:8px"><input id="nbn" placeholder="Nama database baru"><button style="flex:0 0 46px;min-width:46px" onclick="newB()">＋</button></div>
+  <div class="sm">${T.map(t=>`<button class="${tab==t[0]?'on':''}" onclick="go('${t[0]}')">${t[1]} ${t[2]}</button>`).join('')}</div>
+  <button class="bad w" style="margin-top:auto" onclick="logout()">Keluar</button></aside>
+  <main>${tab!='db'&&tab!='usr'&&tab!='hist'?`<div style="margin:0 4px 10px;color:var(--mut);font-size:13px">Database aktif: <b style="color:var(--tx)">${esc(B().name)}</b></div>`:''}${view()}</main>`);
+  if(tab=='pick')fillPn();
+  if((tab=='pick'||tab=='pack')&&!/Android|iPhone|iPad/.test(navigator.userAgent)){const s=document.getElementById('sc');if(s)s.focus()}
+}
+function fillPn(){const s=document.getElementById('ppn');if(!s)return;
+  s.innerHTML=D.db.filter(x=>x.bid==cur&&x.po==v('ppo')&&!D.pick.some(p=>p.dbid==x.id)).map(x=>`<option value="${x.id}">${esc(x.pn)} | ${esc(x.nama)} | SO ${esc(x.so||'-')}</option>`).join('');fillQ()}
+function fillQ(){const d=D.db.find(x=>x.id==v('ppn')),q=document.getElementById('pq');if(d&&q)q.value=d.qty||1}
+function addDb(){
+  const o={id:uid(),bid:cur,po:v('po').trim(),tg:v('tg'),pn:v('pn').trim(),nama:v('nm').trim()};
+  if(!o.po||!o.pn||!o.nama){err='Semua kolom wajib diisi';ok='';return render()}
+  D.db.push(o);save('db');err='';render();
+}
+function addPick(){const q=+v('pq'),d=D.db.find(x=>x.id==v('ppn'));if(!d||!q||q<1){err='Pilih part number dan isi qty';return render()}openPick(d.id,q)}
+function addPickOld(){
+  const q=+v('pq'),d=D.db.find(x=>x.id==v('ppn'));if(!d||!q||q<1){err='Pilih part number dan isi qty';return render()}
+  D.pick.push({id:uid(),bid:cur,dbid:d.id,po:d.po,tg:v('ptg'),pn:d.pn,qty:q,nama:d.nama,ready:false});save('pick');err='';render();
+}
+function ready(id,r){const x=D.pick.find(p=>p.id==id);if(x){x.ready=r;save('pick');render()}}
+function addPack(){const p=D.pick.find(x=>x.id==v('kid')),qp=+v('qp');if(!p){err='Pilih barang';return render()}openPack(p.id,qp||null,null,v('dus'))}
+function addPackOld(){
+  const p=D.pick.find(x=>x.id==v('kid')),dus=v('dus').trim(),qp=+v('qp');
+  if(!p||!dus||!qp){err='Nomor dus dan qty packing wajib diisi';return render()}
+  D.pack.push({id:uid(),bid:p.bid,pid:p.id,po:p.po,tg:p.tg,pn:p.pn,qty:p.qty,dus,qp,nama:p.nama||nama(p.po,p.pn)});save('pack');err='';render();
+}
+function post(id){
+  const i=D.pack.findIndex(x=>x.id==id);if(i<0)return;
+  D.hist.unshift({...D.pack[i],pt:today()});D.pack.splice(i,1);save('pack');save('hist');render();
+}
+function postAll(){if(!confirm('Posted semua hasil packing?'))return;sel('pack').forEach(x=>post(x.id))}
+function del(k,id){if(!confirm('Hapus data ini?'))return;D[k]=D[k].filter(x=>x.id!=id);save(k);render()}
+function clr(){if(!confirm('Kosongkan seluruh database?'))return;D.db=D.db.filter(x=>x.bid!=cur);save('db');render()}
+function addUser(){
+  const u=v('nu').trim(),p=v('np');
+  if(!u||!p){err='Isi user dan PIN';return render()}
+  if(D.users.some(x=>x.u==u)){err='User sudah ada';return render()}
+  D.users.push({u,p,role:v('nr')});save('users');err='';render();
+}
+function delUser(u){if(!confirm('Hapus user '+u+'?'))return;D.users=D.users.filter(x=>x.u!=u);save('users');render()}
+
+/* ===== Jendela proses ===== */
+let MD=null;
+function openPick(id,q,list){MD={m:'pick',id,list:list||[id]};mdRender(q)}
+function openPack(id,q,list,dus){MD={m:'pack',id,list:list||[id]};mdRender(q,dus)}
+function mdClose(){MD=null;document.getElementById('md').style.display='none'}
+function mdItem(){return MD.m=='pick'?D.db.find(i=>i.id==MD.id):D.pick.find(i=>i.id==MD.id)}
+function mdRender(q,dus){
+  const p=MD.m=='pick',x=mdItem(),e=x.qty||1;if(q==null)q=e;
+  const opts=MD.list.length>1?`<label>Item cocok (${MD.list.length})</label><select onchange="MD.id=this.value;mdRender()">${MD.list.map(id=>{const i=(p?D.db:D.pick).find(z=>z.id==id);return `<option value="${id}" ${id==MD.id?'selected':''}>${esc(i.pn)} | ${esc((i.nama||'').trim())} | SO ${esc(i.so||'-')}</option>`}).join('')}</select>`:'';
+  const el=document.getElementById('md');
+  el.innerHTML=`<div class="card gl"><h2>${p?'📋 Proses Penyiapan':'📦 Proses Pengecekan'}</h2>
+  <div class="it" style="animation:none"><div class="im"><div class="pn">${esc(x.pn)}</div><div class="sb">${esc((x.nama||'').trim()||'-')} · PO ${esc(x.po)}${x.so?' · SO '+esc(x.so):''}</div><div class="tg"><span class="tag g">Qty permintaan: ${e}</span></div></div></div>${opts}
+  <label>Qty ${p?'disiapkan':'packing'}</label><input id="mq" type="number" inputmode="numeric" min="1" value="${q}" oninput="mdChk()">
+  <div id="mk" style="display:${q<e?'block':'none'}"><label>Keterangan (qty kurang dari ${e})</label><select id="mkt"><option value="">- pilih -</option><option>Barang kurang</option><option>Rusak</option></select></div>
+  ${p?`<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="mrd" checked style="width:auto"> Tandai Siap (muncul di Pengecekan)</label>`:`<label>Nomor Dus</label><input id="mdus" value="${esc(dus||'')}">`}
+  <div id="mmsg" class="msg"></div>
+  <div class="row" style="margin-top:12px"><button class="ghost" onclick="mdClose()">Batal</button><button onclick="mdSave()">Simpan</button></div></div>`;
+  el.style.display='flex';
+}
+function mdChk(){const e=mdItem().qty||1,q=+v('mq');document.getElementById('mk').style.display=q<e?'block':'none';document.getElementById('mmsg').textContent=q>e?'Qty melebihi permintaan ('+e+'), tidak bisa disimpan':''}
+function mdSave(){
+  const x=mdItem(),e=x.qty||1,q=+v('mq'),ket=v('mkt'),m=document.getElementById('mmsg');
+  if(!q||q<1)return m.textContent='Isi qty minimal 1';
+  if(q>e)return m.textContent='Qty melebihi permintaan ('+e+'), tidak bisa disimpan';
+  if(q<e&&!ket)return m.textContent='Qty beda dari permintaan ('+e+'). Pilih keterangan: Barang kurang atau Rusak';
+  const kt=q<e?ket:'';
+  if(MD.m=='pick'){
+    D.pick.push({id:uid(),bid:cur,dbid:x.id,po:x.po,tg:today(),pn:x.pn,qty:q,dbqty:e,ket:kt,nama:x.nama,so:x.so,ready:document.getElementById('mrd').checked});save('pick');
+  }else{
+    const dus=v('mdus').trim();if(!dus)return m.textContent='Isi nomor dus';
+    D.pack.push({id:uid(),bid:x.bid,pid:x.id,po:x.po,tg:x.tg,pn:x.pn,qty:x.qty,dus,qp:q,nama:x.nama||nama(x.po,x.pn),ket:kt||x.ket||''});save('pack');
+  }
+  mdClose();err='';ok='Tersimpan';render();
+}
+/* ===== Scan ===== */
+const sn=s=>String(s).toUpperCase().replace(/[^A-Z0-9]/g,'');
+const scanBox=m=>`<label>Scan Part Number</label><div class="row" style="flex-wrap:nowrap"><input id="sc" placeholder="Scan atau ketik, lalu Enter" autocapitalize="characters" autocomplete="off" onkeydown="if(event.key=='Enter'){event.preventDefault();onScan('${m}',this.value)}"><button class="ghost" style="flex:0 0 56px;min-width:56px" onclick="cam('${m}')">📷</button></div><div id="smsg" class="msg"></div>`;
+function smsg(t,good){const e=document.getElementById('smsg');if(e){e.textContent=t;e.className=good?'okm':'msg'}}
+function onScan(m,raw){
+  const c=sn(raw),inp=document.getElementById('sc');if(inp)inp.value='';
+  smsg('',true);
+  if(c.length<4)return smsg('Part number tidak ada di sistem',false);
+  const hit=x=>{const p=sn(x.pn);return p.length>=4&&(c==p||c.includes(p))};
+  if(m=='pick'){
+    const l=D.db.filter(x=>x.bid==cur&&!D.pick.some(p=>p.dbid==x.id)&&hit(x));
+    if(!l.length)return smsg(D.db.some(x=>x.bid==cur&&hit(x))?'Part number sudah disiapkan':'Part number tidak ada di sistem',false);
+    openPick(l[0].id,null,l.map(i=>i.id));
+  }else{
+    const used=new Set([...D.pack,...D.hist].map(x=>x.pid)),l=D.pick.filter(x=>x.bid==cur&&x.ready&&!used.has(x.id)&&hit(x));
+    if(!l.length)return smsg(D.db.some(x=>x.bid==cur&&hit(x))?'Part number belum siap atau sudah dicek':'Part number tidak ada di sistem',false);
+    openPack(l[0].id,null,l.map(i=>i.id));
+  }
+}
+let stream=null,h5=null,live=false;
+async function cam(m){
+  const vid=document.getElementById('vid'),q=document.getElementById('qr'),cm=document.getElementById('cmsg');
+  cm.textContent='';document.getElementById('ov').style.display='flex';live=true;
+  const done=t=>{stopCam();onScan(m,t)};
+  try{
+    if('BarcodeDetector' in window){
+      const det=new BarcodeDetector();
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+      q.style.display='none';vid.style.display='block';vid.srcObject=stream;await vid.play();
+      const loop=async()=>{if(!live)return;try{const r=await det.detect(vid);if(r.length&&live)return done(r[0].rawValue)}catch(e){}setTimeout(loop,200)};loop();
+    }else if(typeof Html5Qrcode!=='undefined'){
+      vid.style.display='none';q.style.display='block';h5=new Html5Qrcode('qr');
+      await h5.start({facingMode:'environment'},{fps:10,qrbox:{width:260,height:160}},t=>{if(live)done(t)},()=>{});
+    }else cm.textContent='Scan kamera tidak didukung browser ini. Gunakan scanner atau ketik manual.';
+  }catch(e){cm.textContent='Kamera tidak bisa dibuka (izin ditolak atau diblokir). Gunakan scanner atau ketik manual.'}
+}
+function stopCam(){live=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+  if(h5){const x=h5;h5=null;x.stop().then(()=>x.clear()).catch(()=>{})}
+  document.getElementById('ov').style.display='none'}
+
+/* ===== Excel ===== */
+async function saveXlsx(rows,sheet,name){
+  if(typeof XLSX==='undefined'){err='Library Excel gagal dimuat, cek koneksi';ok='';return render()}
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),sheet);
+  const buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});
+  try{
+    const dl=await claude.use('downloads');
+    if(!dl){err='Ekspor tidak tersedia di tampilan ini. Buka lewat aplikasi Claude.';ok='';return render()}
+    await dl.save({filename:name,data:buf});ok='File Excel disimpan';err='';
+  }catch(e){if(e&&e.code!='declined'){err='Gagal menyimpan file';ok=''}}
+  render();
+}
+function tpl(){saveXlsx([{'Nomor':'6079024905','PART NUMBER':'PN-123','QTY':1,'NO SO':'1251633783','Pemesan':'PT Contoh','Order Date':today()}],'Database','template-database.xlsx')}
+function expo(k){
+  const rows=(k=='pack'?sel('pack'):histRows()).map(x=>{const o={};if(k=='hist'){o['Database']=bn(x.bid);o['Tgl Posted']=x.pt}
+    return Object.assign(o,{'Nomor PO':x.po,'Part Number':x.pn,'Qty':x.qty,'Nomor Dus':x.dus,'Qty Packing':x.qp,'Nama Pemesan':x.nama,'Keterangan':x.ket||''})});
+  saveXlsx(rows,'Hasil Packing','hasil-packing-'+today()+'.xlsx');
+}
+const nk=s=>String(s).toLowerCase().replace(/[^a-z0-9]/g,'');
+const dt=x=>{if(x instanceof Date&&!isNaN(x))return new Date(x.getTime()+12*36e5).toISOString().slice(0,10);return String(x||today()).slice(0,10)};
+function impor(el){
+  const f=el.files[0];if(!f)return;
+  if(typeof XLSX==='undefined'){err='Library Excel gagal dimuat, cek koneksi';return render()}
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array',cellDates:true});
+      let n=0;const PO=['nomor','nomorpo','po','nopo'];
+      const fv=(m,ks)=>{for(const k of ks)if(m[k]!==undefined&&String(m[k]).trim()!=='')return m[k];return ''};
+      const cl=s=>String(s).replace(/\u00a0/g,' ').trim();
+      wb.SheetNames.forEach(sn=>{
+        const a=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:''});
+        const hi=a.findIndex(r=>r.some(c=>nk(c)=='partnumber')&&r.some(c=>PO.includes(nk(c))));
+        if(hi<0)return;
+        a.slice(hi+1).forEach(r=>{const m={};a[hi].forEach((h,i)=>{if(h!=='')m[nk(h)]=r[i]});
+          const po=cl(fv(m,PO)),pn=cl(fv(m,['partnumber','pn']));
+          if(po&&pn){D.db.push({id:uid(),bid:cur,po,tg:dt(fv(m,['orderdate','tgl','tanggal'])),pn,nama:cl(fv(m,['pemesan','nama','namapemesan'])),qty:+fv(m,['qty'])||1,so:cl(fv(m,['noso','so']))});n++}});
+      });
+      save('db');
+      if(n){ok=n+' baris berhasil diimpor';err=''}else{err='Tidak ada baris valid. Pastikan ada header Nomor, PART NUMBER, QTY, NO SO, Pemesan, Order Date';ok=''}
+    }catch(x){err='File tidak bisa dibaca';ok=''}
+    render();
+  };
+  r.readAsArrayBuffer(f);
+}
+render();
+</script></body></html>
