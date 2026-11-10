@@ -69,13 +69,16 @@ header b{background:linear-gradient(90deg,var(--pri),#c44bff);-webkit-background
 #scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:14;display:none}#scrim.open{display:block}
 @media(min-width:900px){#side{transform:none}#scrim{display:none!important}#burger{display:none}main{margin-left:290px;max-width:900px}header{margin-left:290px}}
 </style></head><body>
-<div id="app"></div>
+<div id="app" style="padding:40px;text-align:center;font-family:system-ui;color:#56617d">Memuat data…</div>
 <div id="md"></div>
 <div id="ov"><div class="card gl" style="width:100%;max-width:420px;margin:0"><h2>Scan Part Number</h2><div id="qr"></div><video id="vid" playsinline muted></video><div id="cmsg" class="msg"></div><button class="bad w" onclick="stopCam()">Tutup</button></div></div>
-<script>
+<script id="app-src" type="text/plain">
 const mem={};
-const S={get(k,d){try{const v=localStorage.getItem('posted_'+k);return v?JSON.parse(v):d}catch(e){return mem[k]??d}},
+const SYNC=['db','pick','pack','hist','users','batches'];
+const L={get(k,d){try{const v=localStorage.getItem('posted_'+k);return v?JSON.parse(v):d}catch(e){return mem[k]??d}},
 set(k,v){try{localStorage.setItem('posted_'+k,JSON.stringify(v))}catch(e){mem[k]=v}}};
+const S={get(k,d){if(SYNC.includes(k)&&window.__remote)return k in window.__remote?window.__remote[k]:d;return L.get(k,d)},
+set(k,v){if(SYNC.includes(k)&&window.__remote){window.__remote[k]=v;window.pushRemote(k)}else L.set(k,v)}};
 let D={db:S.get('db',[]),pick:S.get('pick',[]),pack:S.get('pack',[]),hist:S.get('hist',[]),users:S.get('users',[{u:'admin',p:'1234',role:'Admin'}])};
 let me=S.get('me',null),tab='db',err='',ok='';
 const save=k=>S.set(k,D[k]);
@@ -334,12 +337,7 @@ function stopCam(){live=false;if(stream){stream.getTracks().forEach(t=>t.stop())
 async function saveXlsx(rows,sheet,name){
   if(typeof XLSX==='undefined'){err='Library Excel gagal dimuat, cek koneksi';ok='';return render()}
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),sheet);
-  const buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});
-  try{
-    const dl=await claude.use('downloads');
-    if(!dl){err='Ekspor tidak tersedia di tampilan ini. Buka lewat aplikasi Claude.';ok='';return render()}
-    await dl.save({filename:name,data:buf});ok='File Excel disimpan';err='';
-  }catch(e){if(e&&e.code!='declined'){err='Gagal menyimpan file';ok=''}}
+  try{XLSX.writeFile(wb,name);ok='File Excel disimpan';err=''}catch(e){err='Gagal menyimpan file';ok=''}
   render();
 }
 function tpl(){saveXlsx([{'Nomor':'6079024905','PART NUMBER':'PN-123','QTY':1,'NO SO':'1251633783','Pemesan':'PT Contoh','Order Date':today()}],'Database','template-database.xlsx')}
@@ -376,4 +374,25 @@ function impor(el){
   r.readAsArrayBuffer(f);
 }
 render();
-</script></body></html>
+</script>
+<script>
+window.__remote=null;
+(function(){
+  const T={};
+  function banner(t){let b=document.getElementById('netb');if(!b){b=document.createElement('div');b.id='netb';b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99;background:#e04848;color:#fff;text-align:center;padding:8px;font:13px system-ui';document.body.appendChild(b)}b.textContent=t;b.style.display=t?'block':'none'}
+  window.pushRemote=function(k){
+    clearTimeout(T[k]);
+    T[k]=setTimeout(function(){
+      fetch('/api/kv',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({k:k,v:window.__remote[k]})})
+        .then(function(r){if(!r.ok)throw 0;banner('')})
+        .catch(function(){banner('Gagal menyimpan ke server. Cek koneksi lalu ulangi.')});
+    },300);
+  };
+  function boot(){const e=document.createElement('script');e.textContent=document.getElementById('app-src').textContent;document.body.appendChild(e)}
+  fetch('/api/kv').then(function(r){if(!r.ok)throw 0;return r.json()})
+    .then(function(d){window.__remote=d})
+    .catch(function(){window.__remote=null;banner('Server tidak terhubung. Data hanya tersimpan di perangkat ini.')})
+    .then(boot);
+})();
+</script>
+</body></html>
